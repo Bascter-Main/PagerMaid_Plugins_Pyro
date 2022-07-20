@@ -6,12 +6,13 @@ from os import sep
 from random import randint
 
 from pyrogram import Client
+from pyrogram.enums import MessageEntityType
 from pyrogram.errors import PeerIdInvalid, UsernameNotOccupied
 from pyrogram.types import User, Chat
 
 from pagermaid.single_utils import sqlite, safe_remove
 from pagermaid.listener import listener
-from pagermaid.utils import alias_command, client, Message, lang
+from pagermaid.utils import client, Message, lang
 
 from collections import defaultdict
 import json
@@ -67,7 +68,7 @@ async def eat_it(context, user, base, mask, photo, number, layer=0):
 
         try:
             markImg = Image.open(f"plugins{sep}eat{sep}{str(user.id)}.jpg")
-            maskImg = Image.open(f"plugins{sep}eat{sep}mask{str(numberPosition[2])}.png")
+            maskImg = Image.open(f"plugins{sep}eat{sep}mask{str(numberPosition[2])}.png").convert("RGBA")
         except:
             await context.edit(f"图片模版加载出错，请检查并更新配置：mask{str(numberPosition[2])}.png")
             return base
@@ -190,7 +191,7 @@ async def downloadFileByIds(ids, context):
         await context.edit("更新下载模版图片失败，请确认配置文件是否正确")
 
 
-@listener(is_plugin=True, outgoing=True, command=alias_command("eat"),
+@listener(is_plugin=True, outgoing=True, command="eat",
           description="生成一张 吃头像 图片\n"
                       "可选：当第二个参数是数字时，读取预存的配置；\n\n"
                       "当第二个参数是.开头时，头像旋转180°，并且判断r后面是数字则读取对应的配置生成\n\n"
@@ -225,11 +226,11 @@ async def eat(client_: Client, context: Message):
             else:
                 user = context.sender_chat
         if context.entities is not None:
-            if context.entities[0].type == "text_mention":
+            if context.entities[0].type == MessageEntityType.TEXT_MENTION:
                 user = context.entities[0].user
-            elif context.entities[0].type == "phone_number":
+            elif context.entities[0].type == MessageEntityType.PHONE_NUMBER:
                 user = int(context.parameter[0])
-            elif context.entities[0].type == "bot_command":
+            elif context.entities[0].type == MessageEntityType.BOT_COMMAND:
                 if context.from_user:
                     user = context.from_user
                 else:
@@ -411,7 +412,7 @@ async def eat(client_: Client, context: Message):
         markImg = Image.open(f"plugins{sep}eat{sep}" + str(target_user_id) + ".jpg")
         try:
             eatImg = Image.open(f"plugins{sep}eat{sep}eat" + str(number) + ".png")
-            maskImg = Image.open(f"plugins{sep}eat{sep}mask" + str(number) + ".png")
+            maskImg = Image.open(f"plugins{sep}eat{sep}mask" + str(number) + ".png").convert("RGBA")
         except:
             await context.edit(f"图片模版加载出错，请检查并更新配置：{str(number)}")
             return
